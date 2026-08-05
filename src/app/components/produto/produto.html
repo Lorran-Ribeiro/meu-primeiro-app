@@ -1,4 +1,22 @@
 <div class="produto">
-  <h2>{{ nome }}</h2>
-  <p>Preço R$ {{ preco }}</p>
+  <h2>{{ nome | uppercase }}</h2>
+
+  @if (mostrarPreco) {
+    <p>Preco: {{ preco | currency:'BRL' }}</p>
+  }
+   @for (item of produtos; track item) {
+    <div>
+      <h2>{{ item.nome | uppercase }}</h2>
+
+      <p>Preco: {{ item.preco | currency:'BRL' }}</p>
+    </div>
+  }
+
+  @for (item of produtos; track item) {
+    <div>
+      <h3>{{ item.nome | uppercase }}</h3>
+      <p>Preco: {{ item.preco | precoFormatado }}</p>
+    </div>
+  }
+
 </div>
