@@ -55,4 +55,16 @@ export class ListaProdutos {
       }
     });
   }
+  // Ações relacionadas ao carrinho
+  carrinho = signal<{ nome: string; preco: number }[]>([]);
+
+  quantidadeCarrinho = computed(() => this.carrinho().length);
+
+  adicionarAoCarrinho(produto: { nome: string; preco: number }) {
+    this.carrinho.update((listaAtual) => [...listaAtual, produto]);
+  }
+
+  totalCarrinho = computed(() => {
+    return this.carrinho().reduce((total, item) => total + item.preco, 0);
+  });
 }
