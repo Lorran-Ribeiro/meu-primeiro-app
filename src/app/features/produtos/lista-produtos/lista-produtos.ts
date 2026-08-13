@@ -1,6 +1,6 @@
-import { Component, signal, computed, effect } from '@angular/core';
+import { Component, signal, computed, effect, inject } from '@angular/core';
 import { Produto } from '../produto/produto';
-import { HttpClient } from '@angular/common/http';
+import { ProdutosService } from '../produto/produtos.service';
 
 @Component({
   selector: 'app-lista-produtos',
@@ -11,6 +11,7 @@ import { HttpClient } from '@angular/common/http';
 export class ListaProdutos {
   produtos = signal<{ nome: string; preco: number }[]>([]);
   totalProdutos = computed(() => this.produtos().length);
+  private produtosService = inject(ProdutosService);
 
   valorTotal = computed(() => {
     return this.produtos().reduce((total, item) => total + item.preco, 0);
@@ -34,55 +35,29 @@ export class ListaProdutos {
 
   //Método constructor formata os objetos a partir desta classe.
 
-  constructor(private http: HttpClient) {
+  //Criar Método de Requisição Dentro da Classe do Componente ListaProdutos
+  constructor() {
+    this.carregarProdutos();
+    effect(() => {
+      console.log('Lista de produtos alterada:', this.produtos());
+    });
 
-// carrega da API
-this.carregarProdutos();
+    effect(() => {
+      console.log('Valor total atualizado:', this.valorTotal());
+    });
+    effect(() => {
+      if (typeof document !== 'undefined') {
+        document.title = `(${this.totalProdutos()}) Minha Loja`;
+      }
+    });
+  }
 
-// effects continuam iguais
-effect(() => {
-console.log('Lista de produtos alterada:',
+  // FIM DO CONSTRUCTOR,
 
-this.produtos());
-});
-
-effect(() => {
-console.log('Valor total atualizado:',
-
-this.valorTotal());
-}); effect(() => {
-if (typeof document !== 'undefined') {
-document.title = `(${this.totalProdutos()}) Minha Loja`;
-}
-});
-}
-//Criar Método de Requisição Dentro da Classe do Componente ListaProdutos
-carregarProdutos() {
-
-// inicia loading
-this.carregando.set(true);
-
-this.http.get<{ title: string; price: number }[]>
-('https://fakestoreapi.com/products')
-.subscribe({
-next: (dados) => {
-
-// Adaptação da API para o nosso projeto
-const produtosFormatados = dados.map(p => ({
-nome: p.title,
-preco: p.price
-}));
-
-this.produtos.set(produtosFormatados);
-this.carregando.set(false); // finaliza loading
-},
-
-error: (erro) => {
-console.error('Erro ao carregar produtos:', erro);
-this.carregando.set(false); // evita loading infinito
-}
-});
-}
+  //INICIO DO CARREGAR PRODUTOS
+  carregarProdutos() {
+    throw new Error('Method not implemented.');
+  } // FIM DO CARREGAR PRODUTOS
 
   // Ações relacionadas ao carrinho
   carrinho = signal<{ nome: string; preco: number }[]>([]);
@@ -95,7 +70,6 @@ this.carregando.set(false); // evita loading infinito
     this.carrinho.update((listaAtual) => [...listaAtual, produto]);
   }
 
-  
   totalCarrinho = computed(() => {
     return this.carrinho().reduce((total, item) => total + item.preco, 0);
   });
