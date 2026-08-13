@@ -1,5 +1,6 @@
 import { Component, signal, computed, effect } from '@angular/core';
 import { Produto } from '../produto/produto';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-lista-produtos',
@@ -8,11 +9,7 @@ import { Produto } from '../produto/produto';
   styleUrl: './lista-produtos.css',
 })
 export class ListaProdutos {
-  produtos = signal([
-    { nome: 'Notebook', preco: 3800 },
-    { nome: 'Mouse', preco: 179 },
-  ]);
-
+  produtos = signal<{ nome: string; preco: number }[]>([]);
   totalProdutos = computed(() => this.produtos().length);
 
   valorTotal = computed(() => {
@@ -37,26 +34,60 @@ export class ListaProdutos {
 
   //Método constructor formata os objetos a partir desta classe.
 
-  constructor() {
-    //Effect observa alterações realizadas no signal que é o vator de produtos
-    effect(() => {
-      console.log('Lista de produtos alterada:', this.produtos());
-    });
-    //effect observa alterações realizadas do computed signal (valorTotal).
-    // Estes effects geram mensagens no terminal sempre que alterações saõ realizadas.
-    effect(() => {
-      console.log('Valor total atualizado:', this.valorTotal());
-    });
+  constructor(private http: HttpClient) {
 
-    // effect observa o title da página e altera se a condição for atendida
-    effect(() => {
-      if (typeof document !== 'undefined') {
-        document.title = `(${this.totalProdutos()}) Minha Loja`;
-      }
-    });
-  }
+// carrega da API
+this.carregarProdutos();
+
+// effects continuam iguais
+effect(() => {
+console.log('Lista de produtos alterada:',
+
+this.produtos());
+});
+
+effect(() => {
+console.log('Valor total atualizado:',
+
+this.valorTotal());
+}); effect(() => {
+if (typeof document !== 'undefined') {
+document.title = `(${this.totalProdutos()}) Minha Loja`;
+}
+});
+}
+//Criar Método de Requisição Dentro da Classe do Componente ListaProdutos
+carregarProdutos() {
+
+// inicia loading
+this.carregando.set(true);
+
+this.http.get<{ title: string; price: number }[]>
+('https://fakestoreapi.com/products')
+.subscribe({
+next: (dados) => {
+
+// Adaptação da API para o nosso projeto
+const produtosFormatados = dados.map(p => ({
+nome: p.title,
+preco: p.price
+}));
+
+this.produtos.set(produtosFormatados);
+this.carregando.set(false); // finaliza loading
+},
+
+error: (erro) => {
+console.error('Erro ao carregar produtos:', erro);
+this.carregando.set(false); // evita loading infinito
+}
+});
+}
+
   // Ações relacionadas ao carrinho
   carrinho = signal<{ nome: string; preco: number }[]>([]);
+
+  carregando = signal(true);
 
   quantidadeCarrinho = computed(() => this.carrinho().length);
 
@@ -64,6 +95,7 @@ export class ListaProdutos {
     this.carrinho.update((listaAtual) => [...listaAtual, produto]);
   }
 
+  
   totalCarrinho = computed(() => {
     return this.carrinho().reduce((total, item) => total + item.preco, 0);
   });
