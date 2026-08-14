@@ -17,6 +17,7 @@ export class ListaProdutos {
   valorTotal = computed(() => {
     return this.produtos().reduce((total, item) => total + item.preco, 0);
   });
+  event!: string;
 
   exibirProduto(nome: string) {
     this.produtoSelecionado.set(nome);
@@ -32,6 +33,8 @@ export class ListaProdutos {
 
   substituirProdutos() {
     this.produtos.set([{ nome: 'Produto novo', preco: 999 }]);
+
+    
   }
 
   //Método constructor formata os objetos a partir desta classe.
@@ -73,4 +76,5 @@ export class ListaProdutos {
   totalCarrinho = computed(() => {
     return this.carrinho().reduce((total, item) => total + item.preco, 0);
   });
+  
 }
