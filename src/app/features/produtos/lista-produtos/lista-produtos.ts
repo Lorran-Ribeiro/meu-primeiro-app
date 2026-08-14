@@ -12,6 +12,7 @@ export class ListaProdutos {
   produtos = signal<{ nome: string; preco: number }[]>([]);
   totalProdutos = computed(() => this.produtos().length);
   private produtosService = inject(ProdutosService);
+  erro = signal<string | null>(null);
 
   valorTotal = computed(() => {
     return this.produtos().reduce((total, item) => total + item.preco, 0);
@@ -37,18 +38,17 @@ export class ListaProdutos {
 
   //Criar Método de Requisição Dentro da Classe do Componente ListaProdutos
   constructor() {
-    this.carregarProdutos();
-    effect(() => {
-      console.log('Lista de produtos alterada:', this.produtos());
-    });
-
-    effect(() => {
-      console.log('Valor total atualizado:', this.valorTotal());
-    });
-    effect(() => {
-      if (typeof document !== 'undefined') {
-        document.title = `(${this.totalProdutos()}) Minha Loja`;
-      }
+    this.erro.set(null); // limpa erro anterior
+    this.carregando.set(true); // ativa loading
+    this.produtosService.buscarProdutos().subscribe({
+      next: (dados) => {
+        const produtos = this.produtosService.transformarProdutos(dados);
+        this.produtos.set(produtos);
+        this.carregando.set(false);
+      },
+      error: (erro) => {
+        this.carregando.set(false);
+      },
     });
   }
 
